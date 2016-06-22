@@ -21,6 +21,7 @@ import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Adds a new shopping list
@@ -96,15 +97,38 @@ public class AddListDialogFragment extends DialogFragment {
      * Add new active list
      */
     public void addShoppingList() {
-        Firebase ref = new Firebase(Constants.FIREBASE_URL);
+        String userEnteredName = mEditTextListName.getText().toString();
+        String owner = "Anonymous Owner";
+     /*   Firebase ref = new Firebase(Constants.FIREBASE_URL);
         String userEnteredName = mEditTextListName.getText().toString();
         HashMap<String, Object> dateLastChangedObj = new HashMap<String, Object>();
         dateLastChangedObj.put("date", ServerValue.TIMESTAMP);
         ShoppingList shoppingList = new ShoppingList(userEnteredName, "Anonymous Owner",dateLastChangedObj);
         Log.e("userEnteredName",userEnteredName);
 
-        ref.child("activeList").setValue(shoppingList);
+        ref.child(Constants.FIREBASE_LOCATION_ACTIVE_LIST).setValue(shoppingList);*/
         //ref.child("listName").setValue(userEnteredName);
+        if (!userEnteredName.equals("")) {
+            Firebase listsRef = new Firebase(Constants.FIREBASE_URL_ACTIVE_LISTS);
+            Firebase newListRef = listsRef.push();
+            final String listId = newListRef.getKey();
+            HashMap<String, Object> dateLastChangedObj = new HashMap<>();
+            dateLastChangedObj.put("date",ServerValue.TIMESTAMP);
+            ShoppingList shoppingList = new ShoppingList(userEnteredName,owner,dateLastChangedObj);
+            newListRef.setValue(shoppingList);
+             /* Close the dialog fragment */
+            AddListDialogFragment.this.getDialog().cancel();
+
+
+
+
+
+
+
+        }
+
+
+
 
     }
 

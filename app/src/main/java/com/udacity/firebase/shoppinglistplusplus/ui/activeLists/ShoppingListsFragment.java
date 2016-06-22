@@ -1,14 +1,13 @@
 package com.udacity.firebase.shoppinglistplusplus.ui.activeLists;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,7 +17,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.udacity.firebase.shoppinglistplusplus.R;
 import com.udacity.firebase.shoppinglistplusplus.model.ShoppingList;
-import com.udacity.firebase.shoppinglistplusplus.ui.MainActivity;
+import com.udacity.firebase.shoppinglistplusplus.ui.activeListDetails.ActiveListDetailsActivity;
 import com.udacity.firebase.shoppinglistplusplus.utils.Constants;
 import com.udacity.firebase.shoppinglistplusplus.utils.Utils;
 
@@ -32,8 +31,8 @@ import java.util.Date;
  */
 public class ShoppingListsFragment extends Fragment {
     private ListView mListView;
-    private TextView mTextViewListName,mTextViewOwner,mTextViewEditTime;
-    private static final String LOG_TAG = ShoppingListsFragment.class.getSimpleName();
+    private TextView mTextViewListName, mTextViewListOwner;
+    private TextView mTextViewEditTime;
 
     public ShoppingListsFragment() {
         /* Required empty public constructor */
@@ -49,7 +48,7 @@ public class ShoppingListsFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-    
+
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -70,29 +69,42 @@ public class ShoppingListsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         /**
-         * Initalize UI elements
+         * Initialize UI elements
          */
         View rootView = inflater.inflate(R.layout.fragment_shopping_lists, container, false);
         initializeScreen(rootView);
 
-      //  Firebase listNameRef = new Firebase(Constants.FIREBASE_URL).child("listName");
-        final Firebase listNameRef = new Firebase(Constants.FIREBASE_URL).child("activeList");
-        listNameRef.addValueEventListener(new ValueEventListener() {
+        /**
+         * Create Firebase references
+         */
+        Firebase refListName = new Firebase(Constants.FIREBASE_URL).child(Constants.FIREBASE_LOCATION_ACTIVE_LIST);
+
+        /**
+         * Add ValueEventListeners to Firebase references
+         * to control get data and control behavior and visibility of elements
+         */
+        refListName.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.e(LOG_TAG,"The data changed");
-              //  String listName = (String) dataSnapshot.getValue();
+                // You can use getValue to deserialize the data at dataSnapshot
+                // into a ShoppingList.
                 ShoppingList shoppingList = dataSnapshot.getValue(ShoppingList.class);
-                mTextViewListName.setText(shoppingList.getListName());
-                mTextViewOwner.setText(shoppingList.getOwner());
-                if (shoppingList.getDateLastChanged() != null) {
-                    mTextViewEditTime.setText(
-                            Utils.SIMPLE_DATE_FORMAT.format(
-                                    new Date(shoppingList.getDateLastChangedLong())));
-                } else {
-                    mTextViewEditTime.setText("");
-                }
 
+                // If there was no data at the location we added the listener, then
+                // shoppingList will be null.
+                if (shoppingList != null) {
+                    // If there was data, take the TextViews and set the appropriate values.
+                    mTextViewListName.setText(shoppingList.getListName());
+                    mTextViewListOwner.setText(shoppingList.getOwner());
+                    if (shoppingList.getDateLastChanged() != null) {
+                        mTextViewEditTime.setText(
+                                Utils.SIMPLE_DATE_FORMAT.format(
+                                        new Date(shoppingList.getDateLastChangedLong())));
+                    } else {
+                        mTextViewEditTime.setText("");
+                    }
+
+                }
             }
 
             @Override
@@ -111,6 +123,15 @@ public class ShoppingListsFragment extends Fragment {
             }
         });
 
+        mTextViewListName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /* Starts an active showing the details for the selected list */
+                Intent intent = new Intent(getActivity(), ActiveListDetailsActivity.class);
+                startActivity(intent);
+            }
+        });
+
         return rootView;
     }
 
@@ -125,10 +146,9 @@ public class ShoppingListsFragment extends Fragment {
      */
     private void initializeScreen(View rootView) {
         mListView = (ListView) rootView.findViewById(R.id.list_view_active_lists);
+        // Get the TextViews in the single_active_list layout for list name, edit time and owner
         mTextViewListName = (TextView) rootView.findViewById(R.id.text_view_list_name);
-        mTextViewOwner = (TextView) rootView.findViewById(R.id.text_view_created_by_user);
+        mTextViewListOwner = (TextView) rootView.findViewById(R.id.text_view_created_by_user);
         mTextViewEditTime = (TextView) rootView.findViewById(R.id.text_view_edit_time);
-
-
     }
 }
